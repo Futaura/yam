@@ -67,9 +67,13 @@ jobs:
         name: YAM${{ env.YAMVER }}-${{ matrix.platform }}-${{ env.GITHUB_SHA7 }}.lha
 
   build_docker:
+    if: false
     runs-on: ubuntu-latest
     timeout-minutes: 480
     needs: init
+    defaults:
+      run:
+        shell: bash
     container:
       image: walkero/amigagccondocker:${{ matrix.platform }}
       volumes:
@@ -90,11 +94,49 @@ jobs:
         echo YAMVER=$(grep '#define __YAM_VERSION' src/YAM_global.c | cut -d '"' -f2 | tr -d ".") >>$GITHUB_ENV
 
     - name: build YAM release
-      shell: bash
       timeout-minutes: 480
       run: |
         if [[ ${{ matrix.platform }} =~ os4-gcc11 ]]; then OS=os4 ; fi
         if [[ ${{ matrix.platform }} =~ mos-gcc ]]; then OS=mos ; fi
+        ./scripts/mkdist.sh release ${OS}
+
+    - name: upload release files as workflow artifact
+      uses: actions/upload-artifact@v4
+      with:
+        path: YAM*-*-*.lha*
+        name: YAM${{ env.YAMVER }}-${{ matrix.platform }}-${{ env.GITHUB_SHA7 }}.lha
+
+  build_docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 480
+    needs: init
+    defaults:
+      run:
+        shell: bash
+    container:
+      image: amigadev/crosstools:ppc-morphos
+      volumes:
+        - '${{ github.workspace }}:/opt/work'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ ppc-morphos ]
+
+    steps:
+    - name: checkout code
+      uses: actions/checkout@v4
+
+    - name: setup env
+      run : |
+        echo "GITHUB_SHA7=$(echo ${GITHUB_SHA::7})" >>$GITHUB_ENV
+        echo YAMVER=$(grep '#define __YAM_VERSION' src/YAM_global.c | cut -d '"' -f2 | tr -d ".") >>$GITHUB_ENV
+
+    - name: build YAM release
+      timeout-minutes: 480
+      run: |
+        if [[ ${{ matrix.platform }} =~ os4-gcc11 ]]; then OS=os4 ; fi
+        if [[ ${{ matrix.platform }} =~ ppc-morphos ]]; then OS=mos ; fi
         ./scripts/mkdist.sh release ${OS}
 
     - name: upload release files as workflow artifact
