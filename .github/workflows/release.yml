@@ -7,12 +7,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
     - name: cleanup old action artifacts
       run: .github/workflows/purge_artifacts.sh ${{ secrets.GITHUB_TOKEN }}
 
   build_adtools:
     runs-on: ubuntu-latest
     timeout-minutes: 480
+    needs: init
 
     strategy:
       fail-fast: false
@@ -46,7 +50,8 @@ jobs:
         if [[ ${{ matrix.platform }} =~ aros-ppc ]]; then COMPILER=adtools-ppc-aros.tar.bz2 ; fi
         if [[ ${{ matrix.platform }} =~ aros-i386 ]]; then COMPILER=adtools-i386-aros.tar.bz2 ; fi
         if [[ ${{ matrix.platform }} =~ aros-x86_64 ]]; then COMPILER=adtools-x86_64-aros.tar.bz2 ; fi
-        curl -L $(DOWNLOAD_PATH)/${COMPILER} | sudo tar xj -C /
+        if [[ ${{ matrix.platform }} =~ aros-arm ]]; then COMPILER=adtools-arm-aros.tar.bz2 ; fi
+        curl -L ${DOWNLOAD_PATH}/${COMPILER} | sudo tar xj -C /
 
     - name: build YAM release
       timeout-minutes: 480
