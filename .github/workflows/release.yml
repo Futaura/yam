@@ -90,10 +90,11 @@ jobs:
         echo YAMVER=$(grep '#define __YAM_VERSION' src/YAM_global.c | cut -d '"' -f2 | tr -d ".") >>$GITHUB_ENV
 
     - name: build YAM release
+      shell: bash
       timeout-minutes: 480
       run: |
-        if [[ "${{ matrix.platform }}" =~ "os4-gcc11" ]]; then OS=os4 ; fi
-        if [[ "${{ matrix.platform }}" =~ "mos-gcc" ]]; then OS=mos ; fi
+        if [[ ${{ matrix.platform }} =~ os4-gcc11 ]]; then OS=os4 ; fi
+        if [[ ${{ matrix.platform }} =~ mos-gcc ]]; then OS=mos ; fi
         ./scripts/mkdist.sh release ${OS}
 
     - name: upload release files as workflow artifact
