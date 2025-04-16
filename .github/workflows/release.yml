@@ -106,7 +106,7 @@ jobs:
         path: YAM*-*-*.lha*
         name: YAM${{ env.YAMVER }}-${{ matrix.platform }}-${{ env.GITHUB_SHA7 }}.lha
 
-  build_docker:
+  build_morphos:
     runs-on: ubuntu-latest
     timeout-minutes: 480
     needs: init
