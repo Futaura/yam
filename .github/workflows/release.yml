@@ -135,6 +135,7 @@ jobs:
     - name: build YAM release
       timeout-minutes: 480
       run: |
+        export PATH=/usr/local/amiga/bin:${PATH}
         DOWNLOAD_PATH=https://github.com/adtools/adtools/releases/download/20170213
         curl -L ${DOWNLOAD_PATH}/adtools-utils.tar.bz2 | sudo tar xj -C /
         if [[ ${{ matrix.platform }} =~ os4-gcc11 ]]; then OS=os4 ; fi
