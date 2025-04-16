@@ -14,6 +14,7 @@ jobs:
       run: .github/workflows/purge_artifacts.sh ${{ secrets.GITHUB_TOKEN }}
 
   build_adtools:
+    if: false
     runs-on: ubuntu-latest
     timeout-minutes: 480
     needs: init
@@ -91,9 +92,10 @@ jobs:
     - name: build YAM release
       timeout-minutes: 480
       run: |
-        if [[ ${{ matrix.platform }} =~ os4-gcc11 ]]; then ./scripts/mkdist.sh release os4 ; fi
-        if [[ ${{ matrix.platform }} =~ mos-gcc ]]; then OS=mos ; fi
- 
+        if [[ "${{ matrix.platform }}" =~ "os4-gcc11" ]]; then OS=os4 ; fi
+        if [[ "${{ matrix.platform }}" =~ "mos-gcc" ]]; then OS=mos ; fi
+        ./scripts/mkdist.sh release ${OS}
+
     - name: upload release files as workflow artifact
       uses: actions/upload-artifact@v4
       with:
