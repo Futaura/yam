@@ -22,7 +22,7 @@ jobs:
       fail-fast: false
       matrix:
         #platform: [ os3, os4, mos, aros-ppc, aros-i386, aros-x86_64, aros-arm ]
-        platform: [ os3, os4, mos ]
+        platform: [ os3, mos ]
 
     steps:
     - name: checkout code
@@ -64,3 +64,38 @@ jobs:
       with:
         path: YAM*-*-*.lha*
         name: YAM${{ env.YAMVER }}-${{ matrix.platform }}-${{ env.GITHUB_SHA7 }}.lha
+
+  build_docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 480
+    needs: init
+    container:
+      image: walkero/amigagccondocker:${{ matrix.platform }}
+      volumes:
+        - '${{ github.workspace }}:/opt/code'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        #platform: [ os4-gcc11, mos-gcc ]
+        platform: [ os4-gcc11 ]
+
+    steps:
+    - name: checkout code
+      uses: actions/checkout@v4
+
+    - name: setup env
+      run : |
+        echo "GITHUB_SHA7=$(echo ${GITHUB_SHA::7})" >>$GITHUB_ENV
+        echo YAMVER=$(grep '#define __YAM_VERSION' src/YAM_global.c | cut -d '"' -f2 | tr -d ".") >>$GITHUB_ENV
+
+    - name: build YAM release
+      timeout-minutes: 480
+      run: |
+        ./scripts/mkdist.sh release ${{ matrix.platform }}
+
+    - name: upload release files as workflow artifact
+      uses: actions/upload-artifact@v4
+      with:
+        path: YAM*-*-*.lha*
+        name: YAM${{ env.YAMVER }}-${{ matrix.platform 
