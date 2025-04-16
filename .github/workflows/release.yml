@@ -98,4 +98,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         path: YAM*-*-*.lha*
-        name: YAM${{ env.YAMVER }}-${{ matrix.platform 
+        name: YAM${{ env.YAMVER }}-${{ matrix.platform }}-${{ env.GITHUB_SHA7 }}.lha
