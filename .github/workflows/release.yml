@@ -98,7 +98,7 @@ jobs:
       timeout-minutes: 480
       run: |
         export PATH=/usr/local/amiga/bin:/opt/m68k-amigaos/bin:/opt/ppc-amigaos/bin:/opt/ppc-morphos/bin:${PATH}
-        git restore-mtime -q .
+        git restore-mtime
         ./scripts/mkdist.sh release ${{ matrix.platform }}
 
     - name: Upload release files as workflow artifact
@@ -140,7 +140,7 @@ jobs:
     - name: Build YAM release
       timeout-minutes: 480
       run: |
-        git restore-mtime -q .
+        git restore-mtime
         ./scripts/mkdist.sh release os4
 
     - name: Upload release files as workflow artifact
