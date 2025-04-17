@@ -7,6 +7,7 @@ jobs:
     name: Setup environment
     runs-on: ubuntu-latest
     outputs:
+      YAMTAG: ${{ steps.setup.outputs.YAMTAG }}
       YAMVER: ${{ steps.setup.outputs.YAMVER }}
       GITHUB_SHA7: ${{ steps.setup.outputs.GITHUB_SHA7 }}
 
@@ -18,6 +19,7 @@ jobs:
       id: setup
       run : |
         echo "GITHUB_SHA7=$(echo ${GITHUB_SHA::7})" >> $GITHUB_OUTPUT
+        echo YAMTAG=$(grep '#define __YAM_VERSION' src/YAM_global.c | cut -d '"' -f2) >> $GITHUB_OUTPUT
         echo YAMVER=$(grep '#define __YAM_VERSION' src/YAM_global.c | cut -d '"' -f2 | tr -d ".") >> $GITHUB_OUTPUT
         
     - name: Cleanup old action artifacts
@@ -45,8 +47,8 @@ jobs:
     - name: Create release draft
       uses: ncipollo/release-action@v1.16.0
       with:
-        tag: ${{ needs.init.outputs.YAMVER }}
-        name: 'YAM ${{ needs.init.outputs.YAMVER }}'
+        tag: ${{ needs.init.outputs.YAMTAG }}
+        name: 'YAM ${{ needs.init.outputs.YAMTAG }}'
         omitBody: true
         draft: true
         prerelease: false
