@@ -63,7 +63,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 480
     needs: init
-
     strategy:
       fail-fast: false
       matrix:
@@ -115,7 +114,9 @@ jobs:
       image: walkero/amigagccondocker:os4-gcc11
       volumes:
         - '${{ github.workspace }}:/opt/code'
-
+    defaults:
+      run:
+        shell: bash
     strategy:
       fail-fast: false
 
@@ -131,6 +132,7 @@ jobs:
     - name: Build YAM release
       timeout-minutes: 480
       run: |
+        sudo apt-get -qq install rsync
         ./scripts/mkdist.sh release os4
 
     - name: Upload release files as workflow artifact
