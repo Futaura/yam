@@ -27,7 +27,7 @@ jobs:
     name: Create draft release
     runs-on: ubuntu-latest
     timeout-minutes: 480
-    needs: [ init, build_adtools, built_docker_os4 ]
+    needs: [ init, build_adtools, build_docker_os4 ]
     strategy:
       fail-fast: false
 
@@ -51,7 +51,7 @@ jobs:
         prerelease: false
         allowUpdates: true
         updateOnlyUnreleased: true
-        artifacts: YAM${{ needs.setup.outputs.YAMVER }}-*.lha
+        artifacts: YAM${{ needs.init.outputs.YAMVER }}-*.lha
         artifactContentType: application/x-lha
         token: ${{ secrets.GITHUB_TOKEN }}
 
