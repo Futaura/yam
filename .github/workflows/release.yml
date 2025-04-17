@@ -66,7 +66,7 @@ jobs:
         path: YAM*-*-*.lha*
         name: YAM${{ env.YAMVER }}-${{ matrix.platform }}-${{ env.GITHUB_SHA7 }}.lha
 
-  build_docker:
+  build_docker_os4:
     if: false
     runs-on: ubuntu-latest
     timeout-minutes: 480
@@ -106,7 +106,7 @@ jobs:
         path: YAM*-*-*.lha*
         name: YAM${{ env.YAMVER }}-${{ matrix.platform }}-${{ env.GITHUB_SHA7 }}.lha
 
-  build_morphos:
+  build_docker_mos:
     runs-on: ubuntu-latest
     timeout-minutes: 480
     needs: init
@@ -134,6 +134,7 @@ jobs:
 
     - name: build YAM release
       timeout-minutes: 480
+      shell: bash
       run: |
         export PATH=/usr/local/amiga/bin:${PATH}
         DOWNLOAD_PATH=https://github.com/adtools/adtools/releases/download/20170213
