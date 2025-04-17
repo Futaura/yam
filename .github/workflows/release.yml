@@ -128,8 +128,9 @@ jobs:
         export PATH=/usr/local/amiga/bin:${PATH}
         DOWNLOAD_PATH=https://github.com/adtools/adtools/releases/download/20170213
         curl -L ${DOWNLOAD_PATH}/adtools-utils.tar.bz2 | sudo tar xj -C /
-        make --version
         ./scripts/mkdist.sh release mos
+        cd src
+        ./tools/genclasses/GenClasses mui -bYAM -gpl -storm -iClassesExtra.h,ClassesSetup.h -qdl
 
     - name: upload release files as workflow artifact
       uses: actions/upload-artifact@v4
