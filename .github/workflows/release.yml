@@ -109,6 +109,7 @@ jobs:
       image: amigadev/crosstools:ppc-morphos
       volumes:
         - '${{ github.workspace }}:/opt/work'
+      options: --build-arg BUILD_OS=MorphOS --build-arg BUILD_PFX=ppc-morphos
 
     strategy:
       fail-fast: false
