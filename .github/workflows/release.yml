@@ -36,8 +36,6 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
 
     - name: Download all releases
       uses: actions/download-artifact@v4
@@ -72,6 +70,8 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Setup dependencies
       run: |
@@ -125,6 +125,8 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Setup dependencies
       run: |
@@ -141,7 +143,6 @@ jobs:
       timeout-minutes: 480
       run: |
         git restore-mtime -q
-        ls -las
         ./scripts/mkdist.sh release os4
 
     - name: Upload release files as workflow artifact
