@@ -115,7 +115,6 @@ jobs:
       image: walkero/amigagccondocker:os4-gcc11
       volumes:
         - '${{ github.workspace }}:/opt/code'
-      options: --user amidev
 
     strategy:
       fail-fast: false
