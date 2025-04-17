@@ -115,6 +115,8 @@ jobs:
       image: walkero/amigagccondocker:os4-gcc11
       volumes:
         - '${{ github.workspace }}:/opt/code'
+      options: --user amidev
+
     strategy:
       fail-fast: false
 
@@ -124,6 +126,7 @@ jobs:
 
     - name: Build YAM release
       timeout-minutes: 480
+      shell: bash
       run: |
         ./scripts/mkdist.sh release os4
 
