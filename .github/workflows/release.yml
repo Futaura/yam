@@ -4,6 +4,7 @@ on:
 
 jobs:
   init:
+    name: Setup environment
     runs-on: ubuntu-latest
     outputs:
       YAMVER: ${{ steps.setup.outputs.YAMVER }}
@@ -23,6 +24,7 @@ jobs:
       run: .github/workflows/purge_artifacts.sh ${{ secrets.GITHUB_TOKEN }}
 
   build_adtools:
+    name: Build using adtools
     runs-on: ubuntu-latest
     timeout-minutes: 480
     needs: init
@@ -70,6 +72,7 @@ jobs:
         name: YAM${{ needs.setup.outputs.YAMVER }}-${{ matrix.platform }}-${{ needs.setup.outputs.GITHUB_SHA7 }}.lha
 
   build_docker_os4:
+    name: Build for os4 using docker
     runs-on: ubuntu-latest
     timeout-minutes: 480
     needs: init
