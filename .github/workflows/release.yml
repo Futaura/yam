@@ -124,9 +124,13 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Add repository to git safe directories
+      run: |
+        git config --global --add safe.directory $GITHUB_WORKSPACE
+        git config --global --add safe.directory /opt/code
+
     - name: Build YAM release
       timeout-minutes: 480
-      shell: bash
       run: |
         ./scripts/mkdist.sh release os4
 
