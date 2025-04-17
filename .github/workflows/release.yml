@@ -23,6 +23,38 @@ jobs:
     - name: Cleanup old action artifacts
       run: .github/workflows/purge_artifacts.sh ${{ secrets.GITHUB_TOKEN }}
 
+  release_draft:
+    name: Create draft release
+    runs-on: ubuntu-latest
+    timeout-minutes: 480
+    needs: [ init, build_adtools, built_docker_os4 ]
+    strategy:
+      fail-fast: false
+
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Download all releases
+      uses: actions/download-artifact@v4
+      with:
+        merge-multiple: true
+
+    - name: Create release draft
+      uses: ncipollo/release-action@v1.16.0
+      with:
+        tag: ${{ needs.setup.outputs.YAMVER }}
+        name: 'YAM ${{ needs.setup.outputs.YAMVER }}'
+        omitBody: true
+        draft: true
+        prerelease: false
+        allowUpdates: true
+        updateOnlyUnreleased: true
+        artifacts: YAM${{ needs.setup.outputs.YAMVER }}-*.lha
+        artifactContentType: application/x-lha
+        token: ${{ secrets.GITHUB_TOKEN }}
+
   build_adtools:
     name: Build using adtools
     runs-on: ubuntu-latest
@@ -68,11 +100,11 @@ jobs:
     - name: Upload release files as workflow artifact
       uses: actions/upload-artifact@v4
       with:
-        path: YAM*-*-*.lha*
-        name: YAM${{ needs.setup.outputs.YAMVER }}-${{ matrix.platform }}-${{ needs.setup.outputs.GITHUB_SHA7 }}.lha
+        path: YAM*-*.lha*
+        name: YAM${{ needs.init.outputs.YAMVER }}-${{ matrix.platform }}-adtools-${{ needs.init.outputs.GITHUB_SHA7 }}.lha
 
   build_docker_os4:
-    name: Build for os4 using docker
+    name: Build using docker (os4)
     runs-on: ubuntu-latest
     timeout-minutes: 480
     needs: init
@@ -95,5 +127,5 @@ jobs:
     - name: Upload release files as workflow artifact
       uses: actions/upload-artifact@v4
       with:
-        path: YAM*-*-*.lha*
-        name: YAM${{ needs.setup.outputs.YAMVER }}-os4-gcc11-${{ needs.setup.outputs.GITHUB_SHA7 }}.lha
+        path: YAM*-*.lha*
+        name: YAM${{ needs.init.outputs.YAMVER }}-os4-gcc11-${{ needs.init.outputs.GITHUB_SHA7 }}.lha
