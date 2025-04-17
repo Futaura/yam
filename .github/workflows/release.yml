@@ -134,14 +134,13 @@ jobs:
 
     - name: build YAM release
       timeout-minutes: 480
-      shell: bash
       run: |
         export PATH=/usr/local/amiga/bin:${PATH}
         DOWNLOAD_PATH=https://github.com/adtools/adtools/releases/download/20170213
         curl -L ${DOWNLOAD_PATH}/adtools-utils.tar.bz2 | sudo tar xj -C /
         if [[ ${{ matrix.platform }} =~ os4-gcc11 ]]; then OS=os4 ; fi
         if [[ ${{ matrix.platform }} =~ ppc-morphos ]]; then OS=mos ; fi
-        ./scripts/mkdist.sh release ${OS}
+        bash ./scripts/mkdist.sh release ${OS}
 
     - name: upload release files as workflow artifact
       uses: actions/upload-artifact@v4
