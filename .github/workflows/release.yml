@@ -17,8 +17,8 @@ jobs:
     - name: Setup variables
       id: setup
       run : |
-        echo "GITHUB_SHA7=$(echo ${GITHUB_SHA::7})" >> $GITHUB_OUTPUTS
-        echo YAMVER=$(grep '#define __YAM_VERSION' src/YAM_global.c | cut -d '"' -f2 | tr -d ".") >> $GITHUB_OUTPUTS
+        echo "GITHUB_SHA7=$(echo ${GITHUB_SHA::7})" >> $GITHUB_OUTPUT
+        echo YAMVER=$(grep '#define __YAM_VERSION' src/YAM_global.c | cut -d '"' -f2 | tr -d ".") >> $GITHUB_OUTPUT
         
     - name: Cleanup old action artifacts
       run: .github/workflows/purge_artifacts.sh ${{ secrets.GITHUB_TOKEN }}
