@@ -132,6 +132,7 @@ jobs:
     - name: Build YAM release
       timeout-minutes: 480
       run: |
+        sudo apt-get update -y -qq || true
         sudo apt-get -qq install rsync
         ./scripts/mkdist.sh release os4
 
