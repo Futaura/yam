@@ -5,16 +5,24 @@ on:
 jobs:
   init:
     runs-on: ubuntu-latest
+    outputs:
+      YAMVER: ${{ steps.setup.outputs.YAMVER }}
+      GITHUB_SHA7: ${{ steps.setup.outputs.GITHUB_SHA7 }}
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: cleanup old action artifacts
+    - name: Setup variables
+      id: setup
+      run : |
+        echo "GITHUB_SHA7=$(echo ${GITHUB_SHA::7})" >> $GITHUB_OUTPUTS
+        echo YAMVER=$(grep '#define __YAM_VERSION' src/YAM_global.c | cut -d '"' -f2 | tr -d ".") >> $GITHUB_OUTPUTS
+        
+    - name: Cleanup old action artifacts
       run: .github/workflows/purge_artifacts.sh ${{ secrets.GITHUB_TOKEN }}
 
   build_adtools:
-    if: false
     runs-on: ubuntu-latest
     timeout-minutes: 480
     needs: init
@@ -26,20 +34,15 @@ jobs:
         platform: [ os3, mos ]
 
     steps:
-    - name: checkout code
+    - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: setup dependencies
+    - name: Setup dependencies
       run: |
         sudo dpkg --add-architecture i386
         sudo apt-get update -y -qq || true
         sudo apt-get -qq install libc6:i386
         sudo ln -s /usr/lib/x86_64-linux-gnu/libmpfr.so.6 /usr/lib/x86_64-linux-gnu/libmpfr.so.4
-
-    - name: setup env
-      run : |
-        echo "GITHUB_SHA7=$(echo ${GITHUB_SHA::7})" >>$GITHUB_ENV
-        echo YAMVER=$(grep '#define __YAM_VERSION' src/YAM_global.c | cut -d '"' -f2 | tr -d ".") >>$GITHUB_ENV
 
     - name: install adtools build env
       run: |
@@ -54,26 +57,22 @@ jobs:
         if [[ ${{ matrix.platform }} =~ aros-arm ]]; then COMPILER=adtools-arm-aros.tar.bz2 ; fi
         curl -L ${DOWNLOAD_PATH}/${COMPILER} | sudo tar xj -C /
 
-    - name: build YAM release
+    - name: Build YAM release
       timeout-minutes: 480
       run: |
         export PATH=/usr/local/amiga/bin:/opt/m68k-amigaos/bin:/opt/ppc-amigaos/bin:/opt/ppc-morphos/bin:${PATH}
         ./scripts/mkdist.sh release ${{ matrix.platform }}
 
-    - name: upload release files as workflow artifact
+    - name: Upload release files as workflow artifact
       uses: actions/upload-artifact@v4
       with:
         path: YAM*-*-*.lha*
-        name: YAM${{ env.YAMVER }}-${{ matrix.platform }}-${{ env.GITHUB_SHA7 }}.lha
+        name: YAM${{ needs.setup.outputs.YAMVER }}-${{ matrix.platform }}-${{ needs.setup.outputs.GITHUB_SHA7 }}.lha
 
   build_docker_os4:
-    if: false
     runs-on: ubuntu-latest
     timeout-minutes: 480
     needs: init
-    defaults:
-      run:
-        shell: bash
     container:
       image: walkero/amigagccondocker:os4-gcc11
       volumes:
@@ -82,59 +81,16 @@ jobs:
       fail-fast: false
 
     steps:
-    - name: checkout code
+    - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: setup env
-      run : |
-        echo "GITHUB_SHA7=$(echo ${GITHUB_SHA::7})" >>$GITHUB_ENV
-        echo YAMVER=$(grep '#define __YAM_VERSION' src/YAM_global.c | cut -d '"' -f2 | tr -d ".") >>$GITHUB_ENV
-
-    - name: build YAM release
+    - name: Build YAM release
       timeout-minutes: 480
       run: |
         ./scripts/mkdist.sh release os4
 
-    - name: upload release files as workflow artifact
+    - name: Upload release files as workflow artifact
       uses: actions/upload-artifact@v4
       with:
         path: YAM*-*-*.lha*
-        name: YAM${{ env.YAMVER }}-os4-${{ env.GITHUB_SHA7 }}.lha
-
-  build_docker_mos:
-    runs-on: ubuntu-latest
-    timeout-minutes: 480
-    needs: init
-    container:
-      image: amigadev/crosstools:ppc-morphos
-      volumes:
-        - '${{ github.workspace }}:/opt/work'
-      options: --build-arg BUILD_OS=MorphOS --build-arg BUILD_PFX=ppc-morphos
-
-    strategy:
-      fail-fast: false
-
-    steps:
-    - name: checkout code
-      uses: actions/checkout@v4
-
-    - name: setup env
-      run : |
-        echo "GITHUB_SHA7=$(echo ${GITHUB_SHA::7})" >>$GITHUB_ENV
-        echo YAMVER=$(grep '#define __YAM_VERSION' src/YAM_global.c | cut -d '"' -f2 | tr -d ".") >>$GITHUB_ENV
-
-    - name: build YAM release
-      timeout-minutes: 480
-      run: |
-        export PATH=/usr/local/amiga/bin:${PATH}
-        DOWNLOAD_PATH=https://github.com/adtools/adtools/releases/download/20170213
-        curl -L ${DOWNLOAD_PATH}/adtools-utils.tar.bz2 | sudo tar xj -C /
-        ./scripts/mkdist.sh release mos
-        cd src
-        ./tools/genclasses/GenClasses mui -bYAM -gpl -storm -iClassesExtra.h,ClassesSetup.h -qdl
-
-    - name: upload release files as workflow artifact
-      uses: actions/upload-artifact@v4
-      with:
-        path: YAM*-*-*.lha*
-        name: YAM${{ env.YAMVER }}-mos-${{ env.GITHUB_SHA7 }}.lha
+        name: YAM${{ needs.setup.outputs.YAMVER }}-os4-gcc11-${{ needs.setup.outputs.GITHUB_SHA7 }}.lha
