@@ -25,6 +25,10 @@ jobs:
   setup:
     name: Setup environment
     runs-on: ubuntu-latest
+    outputs:
+      date: ${{ steps.setup.outputs.DATE }}
+      sha7: ${{ steps.setup.outputs.GITHUB_SHA7 }}
+      yamver: ${{ steps.setup.outputs.YAMVER }}
     steps:
     - uses: actions/checkout@v4
     - name: Setup variables
@@ -33,12 +37,8 @@ jobs:
         echo "DATE=$(date +%Y%m%d)" >> $GITHUB_OUTPUT
         echo "GITHUB_SHA7=$(echo ${GITHUB_SHA::7})" >> $GITHUB_OUTPUT
         echo YAMVER=$(grep '#define __YAM_VERSION' src/YAM_global.c | cut -d '"' -f2 | tr -d ".") >> $GITHUB_OUTPUT
-    #- name: Cleanup old action artifacts
-    #  run : .github/workflows/purge_artifacts.sh ${{ secrets.GITHUB_TOKEN }}
-    outputs:
-      date: ${{ steps.setup.outputs.DATE }}
-      sha7: ${{ steps.setup.outputs.GITHUB_SHA7 }}
-      yamver: ${{ steps.setup.outputs.YAMVER }}
+    - name: Cleanup old action artifacts
+      run : .github/workflows/purge_artifacts.sh ${{ secrets.GITHUB_TOKEN }}
 
   build_adtools:
     name: Build using adtools
