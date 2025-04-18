@@ -31,7 +31,7 @@ jobs:
       fail-fast: false
       matrix:
         #platform: [ os3, os4, mos, aros-ppc, aros-i386, aros-x86_64 ]
-        platform: [ os3, os4, mos ]
+        platform: [ os3, mos ]
 
     steps:
     - uses: actions/checkout@v4
@@ -43,7 +43,7 @@ jobs:
         sudo apt-get -qq install libc6:i386
         sudo ln -s /usr/lib/x86_64-linux-gnu/libmpfr.so.6 /usr/lib/x86_64-linux-gnu/libmpfr.so.4
 
-    - name: setup env
+    - name: Setup env
       run : |
         echo "DATE=$(date +%Y%m%d)" >> $GITHUB_ENV
         echo "GITHUB_SHA7=$(echo ${GITHUB_SHA::7})" >> $GITHUB_ENV
@@ -58,7 +58,7 @@ jobs:
         echo "COMPILER=${COMPILER}" >> $GITHUB_ENV
         echo "SUFFIX=${SUFFIX}" >> $GITHUB_ENV
 
-    - name: install adtools build env
+    - name: Install adtools build env
       run: |
         curl -L ${{ env.ADTOOLS_DL_PATH }}/adtools-utils.tar.bz2 | sudo tar xj -C /
         curl -L ${{ env.ADTOOLS_DL_PATH }}/${{ env.COMPILER}} | sudo tar xj -C /
@@ -70,16 +70,14 @@ jobs:
     #  uses: mxschmitt/action-tmate@v1
     #  if: matrix.platform == 'os4'
 
-    - name: build YAM nightlies
+    - name: Build YAM nightly
       timeout-minutes: 480
       run: |
         export PATH=/usr/local/amiga/bin:/opt/m68k-amigaos/bin:/opt/ppc-amigaos/bin:/opt/ppc-morphos/bin:${PATH}
         ./scripts/mkdist.sh nightly ${{ matrix.platform }}
 
-    - name: upload nightly build archive
+    - name: Upload nightly build archive
       uses: WebFreak001/deploy-nightly@v3.2.0
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ env.UPLOAD_URL }}
         release_id: ${{ env.RELEASE_ID }}
@@ -88,10 +86,8 @@ jobs:
         asset_content_type: application/x-lzh-compressed
         max_releases: 3
 
-    - name: upload nightly build archive [debug]
+    - name: Upload nightly build archive [debug]
       uses: WebFreak001/deploy-nightly@v3.2.0
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ env.UPLOAD_URL }}
         release_id: ${{ env.RELEASE_ID }}
@@ -100,16 +96,65 @@ jobs:
         asset_content_type: application/x-lzh-compressed
         max_releases: 3
 
-    - name: upload files as workflow artifact [release]
+    - name: Upload files as workflow artifact
       uses: actions/upload-artifact@v4
       with:
-        path: YAM${{ env.YAMVER }}dev-${{ env.DATE }}-${{ env.SUFFIX }}.lha*
-        name: YAM${{ env.YAMVER }}dev-${{ env.DATE }}-${{ env.GITHUB_SHA7 }}-${{ env.SUFFIX }}.lha
+        path: YAM${{ env.YAMVER }}dev-${{ env.DATE }}-${{ env.SUFFIX }}*.lha*
+        name: YAM${{ env.YAMVER }}dev-${{ env.DATE }}-${{ env.GITHUB_SHA7 }}-${{ env.SUFFIX }}
       continue-on-error: true
 
-    - name: upload files as workflow artifact [debug]
+  build_docker_os4:
+    name: Build using docker (os4)
+    runs-on: ubuntu-latest
+    timeout-minutes: 480
+    needs: repo_change_check
+    container:
+      image: walkero/amigagccondocker:os4-gcc11
+      volumes:
+        - '${{ github.workspace }}:/opt/code'
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Add repository to git safe directories
+      run: |
+        git config --global --add safe.directory $GITHUB_WORKSPACE
+        git config --global --add safe.directory /opt/code
+
+    - name: Build YAM nightly
+      timeout-minutes: 480
+      run: |
+        ./scripts/mkdist.sh nightly os4
+
+    - name: Upload nightly build archive
+      uses: WebFreak001/deploy-nightly@v3.2.0
+      with:
+        upload_url: ${{ env.UPLOAD_URL }}
+        release_id: ${{ env.RELEASE_ID }}
+        asset_path: YAM${{ env.YAMVER }}dev-${{ env.DATE }}-AmigaOS4.lha
+        asset_name: YAM${{ env.YAMVER }}dev-$$-AmigaOS4.lha
+        asset_content_type: application/x-lzh-compressed
+        max_releases: 3
+
+    - name: Upload nightly build archive [debug]
+      uses: WebFreak001/deploy-nightly@v3.2.0
+      with:
+        upload_url: ${{ env.UPLOAD_URL }}
+        release_id: ${{ env.RELEASE_ID }}
+        asset_path: YAM${{ env.YAMVER }}dev-${{ env.DATE }}-AmigaOS4-debug.lha
+        asset_name: YAM${{ env.YAMVER }}dev-$$-AmigaOS4-debug.lha
+        asset_content_type: application/x-lzh-compressed
+        max_releases: 3
+
+    - name: Upload files as workflow artifact
       uses: actions/upload-artifact@v4
       with:
-        path: YAM${{ env.YAMVER }}dev-${{ env.DATE }}-${{ env.SUFFIX }}-debug.lha*
-        name: YAM${{ env.YAMVER }}dev-${{ env.DATE }}-${{ env.GITHUB_SHA7 }}-${{ env.SUFFIX }}-debug.lha
+        path: YAM${{ env.YAMVER }}dev-${{ env.DATE }}--AmigaOS4*.lha*
+        name: YAM${{ env.YAMVER }}dev-${{ env.DATE }}-${{ env.GITHUB_SHA7 }}-AmigaOS4
       continue-on-error: true
