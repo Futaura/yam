@@ -1,8 +1,8 @@
 name: nightly
 on:
   workflow_dispatch:
-  schedule:
-  - cron: '0 1 * * *' # run at 1 AM UTC
+  #schedule:
+  #- cron: '0 1 * * *' # run at 1 AM UTC
 
 env:
   ADTOOLS_DL_PATH: https://github.com/adtools/adtools/releases/download/20170213
