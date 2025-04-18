@@ -19,10 +19,9 @@ jobs:
       has_commits: ${{ steps.commit_check.outputs.has_commits }}
     steps:
     - uses: actions/checkout@v4
-    - id: commit_check
-      run: |
-        echo "has_commits=$(git --no-pager log --pretty=oneline --since='24 hours ago' | wc -l)" >> $GITHUB_OUTPUT
-        echo ${has_commits}
+    - name: Check if any commits in last 24 hours
+      id: commit_check
+      run: echo "has_commits=$(git --no-pager log --pretty=oneline --since='24 hours ago' | wc -l)" >> $GITHUB_OUTPUT
 
   setup:
     name: Setup environment
