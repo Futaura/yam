@@ -16,11 +16,13 @@ jobs:
     name: Repository change check
     runs-on: ubuntu-latest
     outputs:
-      has-commits: ${{ steps.commit_check.outputs.has_commits }}
+      has_commits: ${{ steps.commit_check.outputs.has_commits }}
     steps:
     - uses: actions/checkout@v4
     - id: commit_check
-      run: echo "has_commits=$(git --no-pager log --pretty=oneline --since='24 hours ago' | wc -l)" >> $GITHUB_OUTPUT
+      run: |
+        echo "has_commits=$(git --no-pager log --pretty=oneline --since='24 hours ago' | wc -l)" >> $GITHUB_OUTPUT
+        echo ${has_commits}
 
   setup:
     name: Setup environment
