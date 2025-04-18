@@ -9,7 +9,7 @@ env:
   #UPLOAD_URL: https://uploads.github.com/repos/jens-maus/yam/releases/${{ env.RELEASE_ID }}/assets{?name,label}
   #RELEASE_ID: 35749453
   RELEASE_ID: 213285411
-  UPLOAD_URL: https://uploads.github.com/repos/Futaura/yam/releases/${{ env.RELEASE_ID }}/assets{?name,label}
+  UPLOAD_URL: https://uploads.github.com/repos/Futaura/yam/releases/${{ RELEASE_ID }}/assets{?name,label}
 
 jobs:
   repo-change-check:
