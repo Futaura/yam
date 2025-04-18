@@ -13,7 +13,7 @@ env:
 
 jobs:
   repo_change_check:
-    name: repository change check
+    name: Repository change check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,8 +22,8 @@ jobs:
     outputs:
       has-commits: ${{ steps.commit-check.outputs.has-commits }}
 
-  init:
-    name: Init
+  setup:
+    name: Setup environment
     runs-on: ubuntu-latest
     outputs:
       date: ${{ steps.setup.outputs.DATE }}
@@ -40,7 +40,7 @@ jobs:
   build_adtools:
     name: Build using adtools
     runs-on: ubuntu-latest
-    needs: [ repo_change_check, init ]
+    needs: [ setup, repo_change_check ]
     timeout-minutes: 480
     strategy:
       fail-fast: false
@@ -48,25 +48,22 @@ jobs:
         #platform: [ os3, os4, mos, aros-ppc, aros-i386, aros-x86_64 ]
         platform: [ os3, mos ]
     env:
-      DATE: ${{ needs.init.outputs.date }}
-      YAMVER: ${{ needs.init.outputs.yamver }}
-      GITHUB_SHA7: ${{ needs.init.outputs.sha7 }}
+      DATE: ${{ needs.setup.outputs.date }}
+      YAMVER: ${{ needs.setup.outputs.yamver }}
+      GITHUB_SHA7: ${{ needs.setup.outputs.sha7 }}
 
     steps:
     - uses: actions/checkout@v4
 
-    - name: setup dependencies
+    - name: Setup dependencies
       run: |
         sudo dpkg --add-architecture i386
         sudo apt-get update -y -qq || true
         sudo apt-get -qq install libc6:i386
         sudo ln -s /usr/lib/x86_64-linux-gnu/libmpfr.so.6 /usr/lib/x86_64-linux-gnu/libmpfr.so.4
 
-    - name: Setup env
-      run : |
-        echo "DATE=$(date +%Y%m%d)" >> $GITHUB_ENV
-        echo "GITHUB_SHA7=$(echo ${GITHUB_SHA::7})" >> $GITHUB_ENV
-        echo YAMVER=$(grep '#define __YAM_VERSION' src/YAM_global.c | cut -d '"' -f2 | tr -d ".") >> $GITHUB_ENV
+    - name: Install adtools build env
+      run: |
         if [[ ${{ matrix.platform }} =~ os3 ]]; then COMPILER=adtools-m68k-amigaos.tar.bz2 ; SUFFIX=AmigaOS3 ; fi
         if [[ ${{ matrix.platform }} =~ os4 ]]; then COMPILER=adtools-ppc-amigaos.tar.bz2 ; SUFFIX=AmigaOS4 ; fi
         if [[ ${{ matrix.platform }} =~ mos ]]; then COMPILER=adtools-ppc-morphos.tar.bz2 ; SUFFIX=MorphOS ; fi
@@ -74,13 +71,9 @@ jobs:
         if [[ ${{ matrix.platform }} =~ aros-i386 ]]; then COMPILER=adtools-i386-aros.tar.bz2 ; SUFFIX=AROS-i386 ; fi
         if [[ ${{ matrix.platform }} =~ aros-x86_64 ]]; then COMPILER=adtools-x86_64-aros.tar.bz2 ; SUFFIX=AROS-x86_64 ; fi
         if [[ ${{ matrix.platform }} =~ aros-arm ]]; then COMPILER=adtools-arm-aros.tar.bz2 ; SUFFIX=AROS-arm ; fi
-        echo "COMPILER=${COMPILER}" >> $GITHUB_ENV
         echo "SUFFIX=${SUFFIX}" >> $GITHUB_ENV
-
-    - name: Install adtools build env
-      run: |
         curl -L ${{ env.ADTOOLS_DL_PATH }}/adtools-utils.tar.bz2 | sudo tar xj -C /
-        curl -L ${{ env.ADTOOLS_DL_PATH }}/${{ env.COMPILER}} | sudo tar xj -C /
+        curl -L ${{ env.ADTOOLS_DL_PATH }}/${COMPILER} | sudo tar xj -C /
 
 #    - name: cleanup old action artifacts
 #      run: .github/workflows/purge_artifacts.sh ${{ secrets.GITHUB_TOKEN }}
@@ -126,7 +119,7 @@ jobs:
     name: Build using docker (os4)
     runs-on: ubuntu-latest
     timeout-minutes: 480
-    needs: [ init, repo_change_check ]
+    needs: [ setup, repo_change_check ]
     container:
       image: walkero/amigagccondocker:os4-gcc11
       volumes:
@@ -138,13 +131,12 @@ jobs:
       fail-fast: false
     env:
       SUFFIX: AmigaOS4
-      DATE: ${{ needs.init.outputs.date }}
-      YAMVER: ${{ needs.init.outputs.yamver }}
-      GITHUB_SHA7: ${{ needs.init.outputs.sha7 }}
+      DATE: ${{ needs.setup.outputs.date }}
+      YAMVER: ${{ needs.setup.outputs.yamver }}
+      GITHUB_SHA7: ${{ needs.setup.outputs.sha7 }}
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
     - name: Add repository to git safe directories
       run: |
