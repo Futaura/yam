@@ -28,6 +28,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Setup variables
+      id: setup
       run : |
         echo "DATE=$(date +%Y%m%d)" >> $GITHUB_OUTPUT
         echo "GITHUB_SHA7=$(echo ${GITHUB_SHA::7})" >> $GITHUB_OUTPUT
