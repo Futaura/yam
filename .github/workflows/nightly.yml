@@ -55,8 +55,8 @@ jobs:
         if [[ ${{ matrix.platform }} =~ aros-i386 ]]; then COMPILER=adtools-i386-aros.tar.bz2 ; SUFFIX=AROS-i386 ; fi
         if [[ ${{ matrix.platform }} =~ aros-x86_64 ]]; then COMPILER=adtools-x86_64-aros.tar.bz2 ; SUFFIX=AROS-x86_64 ; fi
         if [[ ${{ matrix.platform }} =~ aros-arm ]]; then COMPILER=adtools-arm-aros.tar.bz2 ; SUFFIX=AROS-arm ; fi
-        echo "COMPILER=COMPILER" >> $GITHUB_ENV
-        echo "SUFFIX=SUFFIX" >> $GITHUB_ENV
+        echo "COMPILER=${COMPILER}" >> $GITHUB_ENV
+        echo "SUFFIX=${SUFFIX}" >> $GITHUB_ENV
 
     - name: install adtools build env
       run: |
