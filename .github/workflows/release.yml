@@ -2,19 +2,20 @@ name: release
 on:
   workflow_dispatch:
 
+env:
+  ADTOOLS_DL_PATH: https://github.com/adtools/adtools/releases/download/20170213
+
 jobs:
   init:
     name: Setup environment
     runs-on: ubuntu-latest
     outputs:
-      YAMTAG: ${{ steps.setup.outputs.YAMTAG }}
-      YAMVER: ${{ steps.setup.outputs.YAMVER }}
-      GITHUB_SHA7: ${{ steps.setup.outputs.GITHUB_SHA7 }}
+      yamtag: ${{ steps.setup.outputs.YAMTAG }}
+      yamver: ${{ steps.setup.outputs.YAMVER }}
+      sha7: ${{ steps.setup.outputs.GITHUB_SHA7 }}
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
+    - uses: actions/checkout@v4
     - name: Setup variables
       id: setup
       run : |
@@ -32,10 +33,12 @@ jobs:
     needs: [ init, build_adtools, build_docker_os4 ]
     strategy:
       fail-fast: false
+    env:
+      YAMTAG: ${{ needs.init.outputs.yamtag }}
+      YAMVER: ${{ needs.init.outputs.yamver }}
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
     - name: Download all releases
       uses: actions/download-artifact@v4
@@ -45,14 +48,14 @@ jobs:
     - name: Create release draft
       uses: ncipollo/release-action@v1.16.0
       with:
-        tag: ${{ needs.init.outputs.YAMTAG }}
-        name: 'YAM ${{ needs.init.outputs.YAMTAG }}'
+        tag: ${{ env.YAMTAG }}
+        name: 'YAM ${{ env.YAMTAG }}'
         omitBody: true
         draft: true
         prerelease: false
         allowUpdates: true
         updateOnlyUnreleased: true
-        artifacts: YAM${{ needs.init.outputs.YAMVER }}-*.lha
+        artifacts: YAM${{ env.YAMVER }}-*.lha
         artifactContentType: application/x-lha
         token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -66,10 +69,12 @@ jobs:
       matrix:
         #platform: [ os3, os4, mos, aros-ppc, aros-i386, aros-x86_64, aros-arm ]
         platform: [ os3, mos ]
+    env:
+      YAMVER: ${{ needs.init.outputs.yamver }}
+      GITHUB_SHA7: ${{ needs.init.outputs.sha7 }}
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
@@ -81,10 +86,9 @@ jobs:
         sudo apt-get -qq install git-restore-mtime
         sudo ln -s /usr/lib/x86_64-linux-gnu/libmpfr.so.6 /usr/lib/x86_64-linux-gnu/libmpfr.so.4
 
-    - name: install adtools build env
+    - name: Install adtools build env
       run: |
-        DOWNLOAD_PATH=https://github.com/adtools/adtools/releases/download/20170213
-        curl -L ${DOWNLOAD_PATH}/adtools-utils.tar.bz2 | sudo tar xj -C /
+        curl -L ${{ env.ADTOOLS_DL_PATH }}/adtools-utils.tar.bz2 | sudo tar xj -C /
         if [[ ${{ matrix.platform }} =~ os3 ]]; then COMPILER=adtools-m68k-amigaos.tar.bz2 ; fi
         if [[ ${{ matrix.platform }} =~ os4 ]]; then COMPILER=adtools-ppc-amigaos.tar.bz2 ; fi
         if [[ ${{ matrix.platform }} =~ mos ]]; then COMPILER=adtools-ppc-morphos.tar.bz2 ; fi
@@ -92,7 +96,7 @@ jobs:
         if [[ ${{ matrix.platform }} =~ aros-i386 ]]; then COMPILER=adtools-i386-aros.tar.bz2 ; fi
         if [[ ${{ matrix.platform }} =~ aros-x86_64 ]]; then COMPILER=adtools-x86_64-aros.tar.bz2 ; fi
         if [[ ${{ matrix.platform }} =~ aros-arm ]]; then COMPILER=adtools-arm-aros.tar.bz2 ; fi
-        curl -L ${DOWNLOAD_PATH}/${COMPILER} | sudo tar xj -C /
+        curl -L ${{ env.ADTOOLS_DL_PATH }}/${COMPILER} | sudo tar xj -C /
 
     - name: Build YAM release
       timeout-minutes: 480
@@ -105,7 +109,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         path: YAM*-*.lha*
-        name: YAM${{ needs.init.outputs.YAMVER }}-${{ matrix.platform }}-adtools-${{ needs.init.outputs.GITHUB_SHA7 }}.lha
+        name: YAM${{ env.YAMVER }}-${{ matrix.platform }}-adtools-${{ env.GITHUB_SHA7 }}.lha
 
   build_docker_os4:
     name: Build using docker (os4)
@@ -121,9 +125,11 @@ jobs:
         shell: bash
     strategy:
       fail-fast: false
+    env:
+      YAMVER: ${{ needs.init.outputs.yamver }}
+      GITHUB_SHA7: ${{ needs.init.outputs.sha7 }}
 
     steps:
-    - name: Checkout code
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
@@ -149,4 +155,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         path: YAM*-*.lha*
-        name: YAM${{ needs.init.outputs.YAMVER }}-os4-gcc11-${{ needs.init.outputs.GITHUB_SHA7 }}.lha
+        name: YAM${{ env.YAMVER }}-os4-gcc11-${{ env.GITHUB_SHA7 }}.lha
